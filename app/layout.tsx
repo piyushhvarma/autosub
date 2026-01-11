@@ -8,7 +8,7 @@ const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "SubtitleAI - AI-Powered Subtitle Generation",
+  title: "AutoSub - AI-Powered Subtitle Generation",
   description: "Generate professional subtitles from your videos in seconds using cutting-edge AI technology.",
   generator: "v0.app",
   icons: {

@@ -1,17 +1,16 @@
 "use client"
 
 import type React from "react"
-
-import { useState, useRef, useEffect } from "react"
-import { ArrowLeft, Download, Play, Pause, Volume2, VolumeX, ChevronDown, Maximize } from "lucide-react"
+import { useState, useRef, useEffect, useCallback } from "react"
+import { ArrowLeft, Download, Play, Pause, Volume2, VolumeX, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Sparkles } from "lucide-react"
 import type { UploadedFile } from "@/app/page"
 import { SubtitleBlock } from "@/components/subtitle-block"
 
 interface EditorDashboardProps {
   file: UploadedFile
+  subtitles: any[]
   onBack: () => void
 }
 
@@ -22,66 +21,72 @@ export interface Subtitle {
   text: string
 }
 
-// Sample subtitles for demo
-const sampleSubtitles: Subtitle[] = [
-  { id: "1", startTime: 0, endTime: 3.5, text: "Welcome to this tutorial on AI-powered subtitle generation." },
-  {
-    id: "2",
-    startTime: 3.5,
-    endTime: 7.2,
-    text: "Today we'll explore how machine learning can transform your videos.",
-  },
-  {
-    id: "3",
-    startTime: 7.2,
-    endTime: 11.8,
-    text: "First, let's understand the basics of speech recognition technology.",
-  },
-  { id: "4", startTime: 11.8, endTime: 16.4, text: "Modern AI models can transcribe speech with remarkable accuracy." },
-  {
-    id: "5",
-    startTime: 16.4,
-    endTime: 21.0,
-    text: "They analyze audio patterns and convert them into text in real-time.",
-  },
-  { id: "6", startTime: 21.0, endTime: 25.5, text: "The timestamps are automatically synchronized with the audio." },
-  { id: "7", startTime: 25.5, endTime: 30.0, text: "You can edit any subtitle by clicking on the text area." },
-  { id: "8", startTime: 30.0, endTime: 34.5, text: "Adjust the timing by modifying the start and end times." },
-  { id: "9", startTime: 34.5, endTime: 39.0, text: "Once you're satisfied, export your subtitles in SRT format." },
-  { id: "10", startTime: 39.0, endTime: 43.5, text: "Or render a new video with burned-in captions." },
-]
-
-export function EditorDashboard({ file, onBack }: EditorDashboardProps) {
+export function EditorDashboard({ file, subtitles: initialSubtitles, onBack }: EditorDashboardProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
+  const progressRef = useRef<HTMLDivElement>(null)
+  const timeDisplayRef = useRef<HTMLSpanElement>(null) // Ref for text (No re-renders!)
+  
   const [isPlaying, setIsPlaying] = useState(false)
-  const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
   const [isMuted, setIsMuted] = useState(false)
-  const [subtitles, setSubtitles] = useState<Subtitle[]>(sampleSubtitles)
   const [activeSubtitleId, setActiveSubtitleId] = useState<string | null>(null)
 
-  useEffect(() => {
+  // Initialize subtitles
+  const [subtitles, setSubtitles] = useState<Subtitle[]>(() => {
+    if (initialSubtitles && initialSubtitles.length > 0) {
+      return initialSubtitles.map((sub: any, index: number) => ({
+        id: index.toString(),
+        startTime: sub.start || sub.startTime || 0,
+        endTime: sub.end || sub.endTime || 0,
+        text: sub.text.trim()
+      }))
+    }
+    return []
+  })
+
+  // Format time helper (MM:SS)
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = Math.floor(seconds % 60)
+    return `${mins}:${secs.toString().padStart(2, "0")}`
+  }
+
+  // ⚡ 60FPS ANIMATION LOOP
+  const updateProgress = useCallback(() => {
     const video = videoRef.current
     if (!video) return
 
-    const handleTimeUpdate = () => {
-      setCurrentTime(video.currentTime)
-      const active = subtitles.find((sub) => video.currentTime >= sub.startTime && video.currentTime < sub.endTime)
+    const currTime = video.currentTime
+
+    // 1. Update Blue Slider Bar directly
+    if (progressRef.current && duration > 0) {
+      const percent = (currTime / duration) * 100
+      progressRef.current.style.width = `${percent}%`
+    }
+
+    // 2. Update Time Text directly (Bypasses React State -> SUPER SMOOTH)
+    if (timeDisplayRef.current) {
+      timeDisplayRef.current.innerText = formatTime(currTime)
+    }
+    
+    // 3. Highlight Active Subtitle (This remains in React state, but it's light)
+    const active = subtitles.find((sub) => currTime >= sub.startTime && currTime < sub.endTime)
+    if (active?.id !== activeSubtitleId) {
       setActiveSubtitleId(active?.id || null)
     }
 
-    const handleLoadedMetadata = () => {
-      setDuration(video.duration)
+    // 4. Loop
+    if (!video.paused) {
+      requestAnimationFrame(updateProgress)
     }
+  }, [duration, subtitles, activeSubtitleId])
 
-    video.addEventListener("timeupdate", handleTimeUpdate)
-    video.addEventListener("loadedmetadata", handleLoadedMetadata)
-
-    return () => {
-      video.removeEventListener("timeupdate", handleTimeUpdate)
-      video.removeEventListener("loadedmetadata", handleLoadedMetadata)
+  // Trigger loop on play
+  useEffect(() => {
+    if (isPlaying) {
+      requestAnimationFrame(updateProgress)
     }
-  }, [subtitles])
+  }, [isPlaying, updateProgress])
 
   const togglePlay = () => {
     if (videoRef.current) {
@@ -105,28 +110,36 @@ export function EditorDashboard({ file, onBack }: EditorDashboardProps) {
     const time = Number.parseFloat(e.target.value)
     if (videoRef.current) {
       videoRef.current.currentTime = time
-      setCurrentTime(time)
+      // Manually trigger one update so it doesn't wait for the loop
+      if (progressRef.current && duration > 0) {
+        progressRef.current.style.width = `${(time / duration) * 100}%`
+      }
+      if (timeDisplayRef.current) {
+        timeDisplayRef.current.innerText = formatTime(time)
+      }
     }
   }
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = Math.floor(seconds % 60)
-    return `${mins}:${secs.toString().padStart(2, "0")}`
+  const handleLoadedMetadata = () => {
+    if (videoRef.current) {
+      setDuration(videoRef.current.duration)
+    }
   }
 
+  // Subtitle & Editor Handlers
   const handleSubtitleChange = (id: string, newText: string) => {
     setSubtitles((prev) => prev.map((sub) => (sub.id === id ? { ...sub, text: newText } : sub)))
   }
-
   const handleTimeChange = (id: string, field: "startTime" | "endTime", value: number) => {
     setSubtitles((prev) => prev.map((sub) => (sub.id === id ? { ...sub, [field]: value } : sub)))
   }
-
   const jumpToSubtitle = (startTime: number) => {
     if (videoRef.current) {
       videoRef.current.currentTime = startTime
-      setCurrentTime(startTime)
+      if (!isPlaying) {
+        videoRef.current.play()
+        setIsPlaying(true)
+      }
     }
   }
 
@@ -153,119 +166,135 @@ export function EditorDashboard({ file, onBack }: EditorDashboardProps) {
     URL.revokeObjectURL(url)
   }
 
-  const currentSubtitle = subtitles.find((sub) => currentTime >= sub.startTime && currentTime < sub.endTime)
+  // Find current subtitle for Overlay
+  // Note: We use a simple lookup here during render for the Overlay text only
+  const currentOverlaySubtitle = subtitles.find((sub) => {
+    const time = videoRef.current?.currentTime || 0
+    return time >= sub.startTime && time < sub.endTime
+  })
 
   return (
-    <div className="min-h-screen flex flex-col noise-bg bg-background">
-      <header className="relative z-50 border-b border-white/[0.06] bg-background/60 backdrop-blur-xl sticky top-0">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={onBack} className="ghost-btn rounded-lg">
-              <ArrowLeft className="w-5 h-5" />
+    <div className="h-screen flex flex-col bg-background text-foreground overflow-hidden">
+      
+      {/* HEADER */}
+      <header className="h-14 flex-none border-b border-white/[0.06] bg-background/60 backdrop-blur-xl z-50">
+        <div className="container h-full mx-auto px-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" onClick={onBack} className="h-8 w-8 hover:bg-white/10 rounded-lg">
+              <ArrowLeft className="w-4 h-4" />
             </Button>
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-b from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/20">
-                <Sparkles className="w-4 h-4 text-primary-foreground" />
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded bg-gradient-to-b from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                <Sparkles className="w-3 h-3 text-white" />
               </div>
-              <div>
-                <h1 className="text-sm font-medium tracking-tight text-foreground truncate max-w-[200px] md:max-w-none">
-                  {file.name}
-                </h1>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
-                  {subtitles.length} subtitles generated
-                </p>
-              </div>
+              <h1 className="text-xs font-medium tracking-tight text-foreground truncate max-w-[150px]">
+                {file.name}
+              </h1>
             </div>
           </div>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button className="gap-2 primary-btn">
-                <Download className="w-4 h-4" />
-                <span className="hidden sm:inline">Export</span>
-                <ChevronDown className="w-4 h-4" />
+              <Button size="sm" className="h-8 gap-2 bg-blue-600 hover:bg-blue-500 text-white border-0 text-xs">
+                <Download className="w-3 h-3" />
+                <span>Export</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="glass-card border-white/[0.08]">
-              <DropdownMenuItem onClick={handleExportSRT} className="cursor-pointer">
-                Download .SRT File
-              </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer">Export Rendered Video</DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer">Copy to Clipboard</DropdownMenuItem>
+            <DropdownMenuContent align="end" className="glass-card border-white/[0.08] bg-black/90 backdrop-blur-xl">
+              <DropdownMenuItem onClick={handleExportSRT}>Download .SRT File</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </header>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col lg:flex-row relative">
-        {/* Video Panel */}
-        <div className="lg:w-1/2 xl:w-3/5 p-4 lg:p-6 flex flex-col relative">
-          <div className="absolute inset-0 glow-center opacity-50 pointer-events-none" />
-          <div className="relative glass-card rounded-2xl overflow-hidden flex-1 flex flex-col">
-            {/* Video Container */}
-            <div className="relative flex-1 bg-black/40 flex items-center justify-center min-h-[300px]">
+      {/* BODY */}
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
+        
+        {/* LEFT: Video */}
+        <div className="flex-1 flex flex-col bg-black/90 overflow-hidden relative">
+          <div className="flex-1 min-h-0 flex items-center justify-center p-2 lg:p-4">
+            <div className="relative w-full h-full max-h-full flex items-center justify-center">
               <video
                 ref={videoRef}
                 src={file.url}
-                className="max-w-full max-h-full w-auto h-auto"
+                className="max-w-full max-h-full rounded-lg shadow-2xl bg-black object-contain"
+                onLoadedMetadata={handleLoadedMetadata}
+                onPlay={() => setIsPlaying(true)}
+                onPause={() => setIsPlaying(false)}
                 onClick={togglePlay}
+                playsInline
               />
-
-              {currentSubtitle && (
-                <div className="absolute bottom-16 left-4 right-4 text-center">
-                  <span className="inline-block px-5 py-2.5 bg-black/70 backdrop-blur-md text-white rounded-lg text-base font-medium border border-white/10 shadow-xl">
-                    {currentSubtitle.text}
+              {/* Note: Overlay might flicker slightly less if we used state, but for performance we rely on the 60fps loop update to activeSubtitleId */}
+              {activeSubtitleId && (
+                <div className="absolute bottom-6 left-0 right-0 flex justify-center px-4 pointer-events-none z-20">
+                  <span className="inline-block px-4 py-2 bg-black/60 backdrop-blur-md text-white rounded-lg text-base font-medium border border-white/10 shadow-xl transition-all">
+                     {subtitles.find(s => s.id === activeSubtitleId)?.text}
                   </span>
                 </div>
               )}
             </div>
+          </div>
 
-            <div className="p-4 border-t border-white/[0.06] bg-gradient-to-b from-white/[0.02] to-transparent">
-              {/* Progress Bar */}
-              <div className="mb-3">
-                <input
-                  type="range"
-                  min={0}
-                  max={duration || 100}
-                  value={currentTime}
-                  onChange={handleSeek}
-                  className="w-full h-1 bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:shadow-primary/30"
-                  style={{
-                    background: `linear-gradient(to right, var(--primary) 0%, var(--primary) ${(currentTime / (duration || 1)) * 100}%, rgba(255,255,255,0.1) ${(currentTime / (duration || 1)) * 100}%, rgba(255,255,255,0.1) 100%)`,
-                  }}
-                />
-              </div>
+          {/* FOOTER CONTROLS */}
+          <div className="flex-none px-4 py-3 border-t border-white/[0.08] bg-[#0A0A0A]">
+            <div className="max-w-4xl mx-auto space-y-2">
+               
+               {/* PROGRESS BAR */}
+               <div className="relative w-full h-1.5 group cursor-pointer flex items-center">
+                  <div className="absolute inset-0 bg-white/10 rounded-full h-1.5" />
+                  
+                  {/* Visual Blue Bar (Controlled by Ref) */}
+                  <div 
+                    ref={progressRef}
+                    className="absolute h-1.5 left-0 top-0 bg-blue-500 rounded-full pointer-events-none"
+                    style={{ width: '0%' }}
+                  />
+                  
+                  {/* Invisible Input (THE FIX: step="0.001") */}
+                  <input
+                    type="range"
+                    min={0}
+                    max={duration || 100}
+                    step="0.001" 
+                    defaultValue="0"
+                    onChange={handleSeek}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                  />
 
-              {/* Control Buttons */}
+                   {/* Thumb Hover Effect */}
+                   <div className="absolute w-3 h-3 bg-white rounded-full shadow opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none left-[0%]" />
+               </div>
+
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1">
-                  <Button variant="ghost" size="icon" onClick={togglePlay} className="ghost-btn rounded-lg h-9 w-9">
-                    {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                <div className="flex items-center gap-3">
+                  <Button variant="ghost" size="icon" onClick={togglePlay} className="hover:bg-white/10 h-8 w-8 rounded-full text-white">
+                    {isPlaying ? <Pause className="fill-current w-4 h-4" /> : <Play className="fill-current w-4 h-4 ml-0.5" />}
                   </Button>
-                  <Button variant="ghost" size="icon" onClick={toggleMute} className="ghost-btn rounded-lg h-9 w-9">
-                    {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                  </Button>
-                  <span className="text-xs text-muted-foreground font-mono ml-2">
-                    {formatTime(currentTime)} / {formatTime(duration || 0)}
+                  
+                  {/* Time Text (Controlled by Ref) */}
+                  <span className="text-xs font-mono text-zinc-400">
+                    <span ref={timeDisplayRef} className="text-white">0:00</span> / {formatTime(duration || 0)}
                   </span>
                 </div>
-                <Button variant="ghost" size="icon" className="ghost-btn rounded-lg h-9 w-9">
-                  <Maximize className="w-4 h-4" />
-                </Button>
+
+                <div className="flex items-center gap-1">
+                   <Button variant="ghost" size="icon" onClick={toggleMute} className="hover:bg-white/10 h-8 w-8 text-zinc-400 hover:text-white">
+                    {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Subtitle Editor Panel */}
-        <div className="lg:w-1/2 xl:w-2/5 border-t lg:border-t-0 lg:border-l border-white/[0.06] bg-gradient-to-r from-white/[0.01] to-transparent flex flex-col">
-          <div className="p-4 border-b border-white/[0.06] bg-white/[0.02] backdrop-blur-sm">
-            <h2 className="font-medium text-foreground tracking-tight">Subtitle Editor</h2>
-            <p className="text-xs text-muted-foreground uppercase tracking-widest mt-1">Click any caption to edit</p>
+        {/* RIGHT: List */}
+        <div className="lg:w-[380px] flex flex-col border-l border-white/[0.08] bg-[#000000] h-full overflow-hidden">
+          <div className="px-4 py-3 border-b border-white/[0.08] bg-white/[0.02] flex items-center justify-between flex-none">
+            <h2 className="text-xs font-semibold text-zinc-300 uppercase tracking-wider">Transcript</h2>
+            <span className="text-[10px] bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded border border-blue-500/30">AI Generated</span>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 space-y-2 max-h-[calc(100vh-16rem)]">
+          <div className="flex-1 overflow-y-auto p-3 space-y-2 custom-scrollbar">
             {subtitles.map((subtitle) => (
               <SubtitleBlock
                 key={subtitle.id}
@@ -276,6 +305,7 @@ export function EditorDashboard({ file, onBack }: EditorDashboardProps) {
                 onJumpTo={() => jumpToSubtitle(subtitle.startTime)}
               />
             ))}
+            <div className="h-8" />
           </div>
         </div>
       </div>

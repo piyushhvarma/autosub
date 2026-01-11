@@ -1,10 +1,11 @@
 "use client"
 
-import type React from "react"
-
-import { useState, useCallback } from "react"
-import { Upload, Sparkles, Zap, Clock, FileVideo } from "lucide-react"
+import { useState } from "react"
+import { motion } from "framer-motion"
+import { Upload, Zap, FileVideo } from "lucide-react"
 import { Button } from "@/components/ui/button"
+// 1. Import the new AuroraText component
+import { AuroraText } from "@/components/ui/aurora-text"
 
 interface LandingPageProps {
   onFileUpload: (file: File) => void
@@ -12,174 +13,126 @@ interface LandingPageProps {
 
 export function LandingPage({ onFileUpload }: LandingPageProps) {
   const [isDragging, setIsDragging] = useState(false)
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
-  const handleDragOver = useCallback((e: React.DragEvent) => {
+  const handleDrag = (e: React.DragEvent) => {
     e.preventDefault()
-    setIsDragging(true)
-  }, [])
-
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(false)
-  }, [])
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(false)
-    const file = e.dataTransfer.files[0]
-    if (file && file.type.startsWith("video/")) {
-      setSelectedFile(file)
-    }
-  }, [])
-
-  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file && file.type.startsWith("video/")) {
-      setSelectedFile(file)
-    }
-  }, [])
-
-  const handleUpload = () => {
-    if (selectedFile) {
-      onFileUpload(selectedFile)
+    e.stopPropagation()
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setIsDragging(true)
+    } else if (e.type === "dragleave") {
+      setIsDragging(false)
     }
   }
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return "0 Bytes"
-    const k = 1024
-    const sizes = ["Bytes", "KB", "MB", "GB"]
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return Number.parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const file = e.dataTransfer.files[0]
+      if (file.type.startsWith("video/")) {
+        onFileUpload(file)
+      } else {
+        alert("Please upload a video file (MP4, MOV, WebM)")
+      }
+    }
+  }
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      onFileUpload(e.target.files[0])
+    }
   }
 
   return (
-    <div className="min-h-screen flex flex-col noise-bg">
-      {/* Ambient glow layer */}
-      <div className="fixed inset-0 glow-bg pointer-events-none" />
+    // Clean dark background
+    <div className="relative min-h-screen bg-[#030303] text-white overflow-hidden selection:bg-blue-500/30">
+      
+      {/* Subtle Grid Background Overlay for texture */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff0a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff0a_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none z-0" />
 
-      <header className="relative z-50 border-b border-white/[0.06] bg-background/60 backdrop-blur-xl sticky top-0">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-lg bg-gradient-to-b from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/20">
-              <Sparkles className="w-5 h-5 text-primary-foreground" />
+      <div className="relative z-10">
+        
+        {/* --- NAVBAR --- */}
+        <nav className="container mx-auto px-6 h-20 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 font-bold text-xl tracking-tighter">
+              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(37,99,235,0.5)]">
+                 <Zap className="w-5 h-5 text-white fill-current" />
+              </div>
+              <span>AutoSub</span>
             </div>
-            <span className="text-lg font-semibold tracking-tight text-foreground">SubtitleAI</span>
           </div>
-          <nav className="hidden md:flex items-center gap-6">
-            <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              Features
-            </a>
-            <a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              Pricing
-            </a>
-            <Button variant="outline" size="sm" className="ghost-btn text-foreground bg-transparent">
-              Sign In
-            </Button>
-          </nav>
-        </div>
-      </header>
-
-      {/* Hero Section */}
-      <section className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 py-16 md:py-24">
-        <div className="max-w-4xl mx-auto text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass-card text-primary text-xs uppercase tracking-widest mb-8">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span className="font-medium">Powered by Advanced AI</span>
+          <div className="hidden md:flex items-center gap-6 text-sm font-medium text-zinc-400">
+            <Button variant="ghost" className="text-white hover:bg-white/10">Sign In</Button>
           </div>
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-medium tracking-tight text-foreground mb-6 text-balance">
-            AI Subtitles in{" "}
-            <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">Seconds</span>
-          </h1>
-          <p className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto text-pretty leading-relaxed">
-            Upload your video and let our cutting-edge AI generate accurate, perfectly-timed subtitles. Edit, customize,
-            and export in any format.
-          </p>
-        </div>
+        </nav>
 
-        <div className="w-full max-w-2xl mx-auto relative">
-          <div className="absolute inset-0 glow-center rounded-2xl" />
-          <div
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-            className={`
-              relative glass-card rounded-2xl p-8 md:p-12 transition-all duration-300 cursor-pointer
-              ${isDragging ? "scale-[1.02] border-primary/40 shadow-lg shadow-primary/10" : ""}
-              ${selectedFile ? "border-primary/30" : ""}
-            `}
+        {/* --- MAIN HERO CONTENT --- */}
+        <main className="container mx-auto px-6 pt-20 pb-32 flex flex-col items-center text-center">
+          
+          {/* BADGE REMOVED HERE */}
+
+          {/* Hero Title with AuroraText */}
+          <motion.h1 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="text-5xl md:text-7xl font-bold tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-white/60"
           >
-            {!selectedFile && (
-              <input
-                type="file"
-                accept="video/*"
-                onChange={handleFileSelect}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-              />
-            )}
+            Your Videos, <br />
+            {/* Using AuroraText for the last line. You can change colors prop here if you want different shades. */}
+            <AuroraText colors={["#FF0080", "#7928CA", "#0070F3", "#38bdf8"]}>
+              Speakin' Hinglish.
+            </AuroraText>
+          </motion.h1>
 
-            {selectedFile ? (
-              <div className="flex flex-col items-center gap-4">
-                <div className="w-16 h-16 rounded-xl bg-gradient-to-b from-primary/30 to-primary/10 flex items-center justify-center border border-primary/20">
-                  <FileVideo className="w-8 h-8 text-primary" />
-                </div>
-                <div className="text-center">
-                  <p className="text-base font-medium text-foreground tracking-tight">{selectedFile.name}</p>
-                  <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wide">
-                    {formatFileSize(selectedFile.size)}
-                  </p>
-                </div>
-                <Button onClick={handleUpload} size="lg" className="mt-2 primary-btn" type="button">
-                  <Upload className="w-4 h-4 mr-2" />
-                  Start Processing
-                </Button>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center gap-4">
-                <div
-                  className={`w-16 h-16 rounded-xl flex items-center justify-center transition-all duration-300 border ${
-                    isDragging ? "bg-primary/20 border-primary/30 scale-110" : "bg-white/[0.03] border-white/[0.06]"
-                  }`}
-                >
-                  <Upload
-                    className={`w-8 h-8 transition-colors ${isDragging ? "text-primary" : "text-muted-foreground"}`}
-                  />
-                </div>
-                <div className="text-center">
-                  <p className="text-base font-medium text-foreground tracking-tight">
-                    {isDragging ? "Drop your video here" : "Drag & drop your video"}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-2 uppercase tracking-wide">
-                    or click to browse — MP4, MOV, AVI up to 2GB
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+          <p className="text-lg text-zinc-400 max-w-2xl mb-12 leading-relaxed">
+            Stop typing manually. Upload your video and let our AI generate frame-perfect subtitles in seconds.
+          </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto mt-16 relative z-10">
-          {[
-            { icon: Zap, title: "Lightning Fast", desc: "Generate subtitles in under a minute" },
-            { icon: Sparkles, title: "99% Accuracy", desc: "State-of-the-art speech recognition" },
-            { icon: Clock, title: "Perfect Timing", desc: "Auto-sync with video timeline" },
-          ].map((feature) => (
-            <div
-              key={feature.title}
-              className="flex items-start gap-4 p-4 rounded-xl glass-card spring-hover cursor-default"
+          {/* --- UPLOAD BOX --- */}
+           <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="w-full max-w-xl relative group z-20"
             >
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-b from-primary/20 to-primary/5 flex items-center justify-center shrink-0 border border-primary/10">
-                <feature.icon className="w-5 h-5 text-primary" />
+               {/* Glow Effect behind box */}
+               <div className={`absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000 ${isDragging ? 'opacity-60' : ''}`} />
+
+              <div
+                onDragEnter={handleDrag}
+                onDragLeave={handleDrag}
+                onDragOver={handleDrag}
+                onDrop={handleDrop}
+                onClick={() => document.getElementById('file-upload')?.click()}
+                className={`
+                  relative bg-[#0A0A0A] border-2 border-dashed rounded-xl p-12
+                  flex flex-col items-center justify-center gap-4 text-center
+                  transition-all duration-300 ease-in-out cursor-pointer
+                  ${isDragging 
+                    ? "border-blue-500 bg-blue-500/5 scale-[1.02]" 
+                    : "border-white/10 hover:border-white/20 hover:bg-white/5"
+                  }
+                `}
+              >
+                 <input
+                  id="file-upload"
+                  type="file"
+                  className="hidden"
+                  accept="video/mp4,video/quicktime,video/webm"
+                  onChange={handleFileSelect}
+                />
+                 <Upload className={`w-10 h-10 transition-colors ${isDragging ? "text-blue-500 animate-bounce" : "text-zinc-500 group-hover:text-blue-400"}`} />
+                 <p className="text-lg font-medium text-white">Drag & drop video here</p>
+                 <p className="text-sm text-zinc-500">MP4, MOV, WebM (Max 25MB)</p>
               </div>
-              <div>
-                <h3 className="font-medium text-foreground tracking-tight">{feature.title}</h3>
-                <p className="text-sm text-muted-foreground mt-0.5">{feature.desc}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+           </motion.div>
+
+        </main>
+      </div>
+
     </div>
   )
 }

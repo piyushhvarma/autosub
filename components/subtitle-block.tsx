@@ -4,6 +4,7 @@ import { useRef, useEffect } from "react"
 import { Play } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { Subtitle } from "@/components/editor-dashboard"
+import { cn } from "@/lib/utils"
 
 interface SubtitleBlockProps {
   subtitle: Subtitle
@@ -17,12 +18,14 @@ export function SubtitleBlock({ subtitle, isActive, onTextChange, onTimeChange, 
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const blockRef = useRef<HTMLDivElement>(null)
 
+  // 1. Auto-scroll to active block
   useEffect(() => {
     if (isActive && blockRef.current) {
       blockRef.current.scrollIntoView({ behavior: "smooth", block: "center" })
     }
   }, [isActive])
 
+  // 2. Auto-resize text area height
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto"
@@ -49,62 +52,82 @@ export function SubtitleBlock({ subtitle, isActive, onTextChange, onTimeChange, 
   return (
     <div
       ref={blockRef}
-      className={`
-        group relative p-4 rounded-xl transition-all duration-300 cursor-default
-        ${
-          isActive
-            ? "glass-card border-primary/30 shadow-lg shadow-primary/5 scale-[1.01]"
-            : "bg-white/[0.02] border border-white/[0.06] hover:bg-white/[0.04] hover:border-white/[0.1] hover:scale-[1.01] hover:translate-x-1"
-        }
-      `}
-      style={{
-        transition: "all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
-      }}
+      onClick={onJumpTo} // Make the whole card clickable to jump
+      className={cn(
+        "group relative p-4 rounded-xl transition-all duration-300 border cursor-pointer",
+        // ✨ THE GLOW UP LOGIC ✨
+        isActive
+          ? "bg-blue-500/10 border-blue-500/50 shadow-[0_0_20px_rgba(59,130,246,0.15)] scale-[1.01]"
+          : "bg-white/[0.02] border-white/[0.06] hover:bg-white/[0.04] hover:border-white/10"
+      )}
     >
+      {/* Neon Indicator Line */}
       {isActive && (
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-8 bg-primary rounded-r-full shadow-lg shadow-primary/50" />
+        <div className="absolute left-0 top-3 bottom-3 w-1 bg-blue-500 rounded-r-full shadow-[0_0_8px_#3b82f6]" />
       )}
 
-      {/* Time Inputs */}
-      <div className="flex items-center gap-2 mb-3">
-        <div className="flex items-center gap-1.5">
-          <input
-            type="text"
-            value={formatTimeInput(subtitle.startTime)}
-            onChange={(e) => onTimeChange("startTime", parseTimeInput(e.target.value))}
-            className="w-16 px-2 py-1 text-[10px] font-mono uppercase tracking-wider bg-white/[0.04] border border-white/[0.08] rounded-md text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/30 transition-all"
-          />
-          <span className="text-muted-foreground text-xs">→</span>
-          <input
-            type="text"
-            value={formatTimeInput(subtitle.endTime)}
-            onChange={(e) => onTimeChange("endTime", parseTimeInput(e.target.value))}
-            className="w-16 px-2 py-1 text-[10px] font-mono uppercase tracking-wider bg-white/[0.04] border border-white/[0.08] rounded-md text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/30 transition-all"
-          />
+      {/* Header: Time Inputs & Play Button */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          {/* Start Time */}
+          <div className={cn("px-2 py-1 rounded-md border transition-colors", 
+             isActive ? "bg-blue-500/20 border-blue-500/30" : "bg-black/20 border-white/5"
+          )}>
+            <input
+              type="text"
+              value={formatTimeInput(subtitle.startTime)}
+              onClick={(e) => e.stopPropagation()} // Prevent jumping when clicking input
+              onChange={(e) => onTimeChange("startTime", parseTimeInput(e.target.value))}
+              className={cn("w-12 bg-transparent text-[10px] font-mono focus:outline-none text-center",
+                isActive ? "text-blue-200" : "text-zinc-400"
+              )}
+            />
+          </div>
+
+          <span className="text-zinc-600 text-[10px]">→</span>
+
+          {/* End Time */}
+          <div className={cn("px-2 py-1 rounded-md border transition-colors", 
+             isActive ? "bg-blue-500/20 border-blue-500/30" : "bg-black/20 border-white/5"
+          )}>
+            <input
+              type="text"
+              value={formatTimeInput(subtitle.endTime)}
+              onClick={(e) => e.stopPropagation()}
+              onChange={(e) => onTimeChange("endTime", parseTimeInput(e.target.value))}
+              className={cn("w-12 bg-transparent text-[10px] font-mono focus:outline-none text-center",
+                isActive ? "text-blue-200" : "text-zinc-400"
+              )}
+            />
+          </div>
         </div>
 
+        {/* Play Button (Only visible on hover) */}
         <Button
           variant="ghost"
           size="icon"
-          className="ml-auto h-7 w-7 opacity-0 group-hover:opacity-100 transition-all duration-200 ghost-btn rounded-lg"
-          onClick={onJumpTo}
+          className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white/10"
+          onClick={(e) => {
+            e.stopPropagation()
+            onJumpTo()
+          }}
         >
-          <Play className="w-3 h-3" />
+          <Play className="w-3 h-3 fill-current" />
         </Button>
       </div>
 
-      {/* Text Area */}
+      {/* The Subtitle Text */}
       <textarea
         ref={textareaRef}
         value={subtitle.text}
+        onClick={(e) => e.stopPropagation()} // Allow clicking text to edit without re-triggering jump
         onChange={(e) => onTextChange(e.target.value)}
-        className={`
-          w-full bg-transparent border-0 resize-none text-sm leading-relaxed
-          focus:outline-none focus:ring-0 placeholder:text-muted-foreground
-          ${isActive ? "text-foreground" : "text-foreground/80"}
-        `}
+        className={cn(
+          "w-full bg-transparent border-none p-0 resize-none text-sm leading-relaxed focus:ring-0 focus:outline-none",
+          isActive ? "text-white font-medium drop-shadow-sm" : "text-zinc-400 group-hover:text-zinc-300"
+        )}
         rows={1}
-        placeholder="Enter subtitle text..."
+        spellCheck={false}
       />
     </div>
   )
