@@ -9,26 +9,12 @@ const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "AutoSub - AI-Powered Subtitle Generation",
-  description: "Generate professional subtitles from your videos in seconds using cutting-edge AI technology.",
-  generator: "v0.app",
+  description: "Generate professional subtitles from your videos in seconds.",
   icons: {
-    icon: [
-      {
-        url: "/icon-light-32x32.png",
-        media: "(prefers-color-scheme: light)",
-      },
-      {
-        url: "/icon-dark-32x32.png",
-        media: "(prefers-color-scheme: dark)",
-      },
-      {
-        url: "/icon.svg",
-        type: "image/svg+xml",
-      },
-    ],
-    apple: "/apple-icon.png",
+    icon: "/icon.svg",
+    apple: "/icon.svg",
   },
-}
+};
 
 export const viewport: Viewport = {
   themeColor: "#1a1a2e",
