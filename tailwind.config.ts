@@ -33,6 +33,12 @@ const config = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        fontFamily: {
+        // "sans" will be your "sub" font (Inter)
+        sans: ["var(--font-inter)", "sans-serif"],
+        // "serif" will be your "auto" font (Playfair)
+        serif: ["var(--font-playfair)", "serif"],
+      },
         aurora: {
           from: {
             backgroundPosition: "50% 50%, 50% 50%",

@@ -2,10 +2,9 @@
 
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { Upload, Zap, FileVideo } from "lucide-react"
+import { Upload } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
-// 1. Import your new components
 import { AuroraBackground } from "@/components/ui/aurora-background"
 import { AuroraText } from "@/components/ui/aurora-text"
 import { CometCard } from "@/components/ui/comet-card"
@@ -48,15 +47,13 @@ export function LandingPage({ onFileUpload }: LandingPageProps) {
   }
 
   return (
-    // 2. Wrap everything in AuroraBackground
     <AuroraBackground>
       <div className="relative z-10 w-full h-full flex flex-col min-h-screen">
         
         {/* --- NAVBAR --- */}
         <nav className="container mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            {/* Logo Fix: Used standard sizing so it doesn't look huge */}
-            <div className="relative w-50 h-100"> 
+            <div className="relative w-60 h-100"> 
               <Image 
                 src="/logo.svg" 
                 alt="AutoSub Logo" 
@@ -75,24 +72,30 @@ export function LandingPage({ onFileUpload }: LandingPageProps) {
         {/* --- MAIN HERO CONTENT --- */}
         <main className="flex-1 container mx-auto px-6 pt-20 pb-32 flex flex-col items-center text-center">
           
-          {/* Hero Title with AuroraText */}
+          {/* Hero Title */}
           <motion.h1 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-5xl md:text-7xl font-bold tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-white/60"
+            className="text-5xl md:text-7xl mb-6 bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-white/60"
           >
-            Your Videos, <br />
-            <AuroraText colors={["#7C3AED ", "#2563EB ", "#38BDF8 ", "#EC4899"]}>
-              Your Language.
-            </AuroraText>
+            <span className="font-sans font-bold tracking-tighter block mb-2">
+            your videos,
+            </span>
+
+            <span className="font-serif italic font-medium tracking-tighter">
+               <AuroraText colors={["#FFFFFF", "#E5E7EB", "#D1D5DB", "#F3F4F6"]}>
+                 your language.
+               </AuroraText>
+            </span>
           </motion.h1>
+
 
           <p className="text-lg text-zinc-400 max-w-2xl mb-12 leading-relaxed">
             Stop typing manually. Upload your video and let our AI generate frame-perfect subtitles in seconds.
           </p>
 
-          {/* --- UPLOAD BOX (Solid Black Version) --- */}
+          {/* --- UPLOAD BOX --- */}
           <div className="w-full max-w-xl h-64 relative z-20">
              <CometCard className="w-full h-full">
                <div
@@ -112,32 +115,31 @@ export function LandingPage({ onFileUpload }: LandingPageProps) {
                    }
                  `}
                >
-                  
-
-                  <input
+                 
+                 <input
                    id="file-upload"
                    type="file"
                    className="hidden"
                    accept="video/mp4,video/quicktime,video/webm"
                    onChange={handleFileSelect}
                  />
-                  <Upload
-  className={`
-    relative z-10 w-10 h-10 transition-all
-    ${isDragging 
-      ? "text-cyan-300 scale-110" 
-      : "text-zinc-400"
-    }
-  `}
-/>
+                 <Upload
+                  className={`
+                    relative z-10 w-10 h-10 transition-all
+                    ${isDragging 
+                      ? "text-cyan-300 scale-110" 
+                      : "text-zinc-400"
+                    }
+                  `}
+                />
 
-<p className="text-lg font-medium text-white/90">
-  Drop your video here
-</p>
+                <p className="text-lg font-medium text-white/90">
+                  Drop your video here
+                </p>
 
-<p className="text-sm text-zinc-400">
-  MP4, MOV, WebM · Max 25MB
-</p>
+                <p className="text-sm text-zinc-400">
+                  MP4, MOV, WebM · Max 25MB
+                </p>
 
                </div>
              </CometCard>
