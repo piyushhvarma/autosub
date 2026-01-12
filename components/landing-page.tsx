@@ -48,16 +48,20 @@ export function LandingPage({ onFileUpload }: LandingPageProps) {
 
   return (
     <AuroraBackground>
-      <div className="relative z-10 w-full h-full flex flex-col min-h-screen">
+      <div className="relative z-10 w-full h-screen flex flex-col overflow-hidden">
         
         {/* --- NAVBAR --- */}
-        <nav className="container mx-auto px-6 h-20 flex items-center justify-between">
+        {/* ✅ UPDATE 1: Increased navbar height to h-32 (128px) to make room */}
+        <nav className="flex-none container mx-auto px-6 h-32 flex items-center justify-between z-50">
           <div className="flex items-center gap-3">
-            <div className="relative w-60 h-100"> 
+            {/* ✅ UPDATE 2: Increased logo container to h-28 (112px) */}
+            {/* Also increased width to w-80 to allow wider logos to scale up */}
+            <div className="relative w-80 h-50"> 
               <Image 
                 src="/logo.svg" 
                 alt="AutoSub Logo" 
                 fill 
+                // object-left ensures it stays anchored to the left
                 className="object-contain object-left" 
                 priority
               />
@@ -70,30 +74,27 @@ export function LandingPage({ onFileUpload }: LandingPageProps) {
         </nav>
 
         {/* --- MAIN HERO CONTENT --- */}
-        <main className="flex-1 container mx-auto px-6 pt-20 pb-32 flex flex-col items-center text-center">
+        {/* Removed negative margin since nav is taller now */}
+        <main className="flex-1 container mx-auto px-6 flex flex-col items-center justify-center text-center">
           
           {/* Hero Title */}
           <motion.h1 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-5xl md:text-7xl mb-6 bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-white/60"
+            className="text-5xl md:text-7xl mb-8 bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-white/60"
           >
-            {/* Line 1: Standard Sans Font */}
             <span className="font-sans font-bold tracking-tighter block mb-3">
               your videos,
             </span>
 
-            {/* Line 2: Premium Serif Font + Pointer Highlight */}
             <div className="inline-block relative">
-              
                  <span className="font-serif italic font-medium tracking-tighter px-4 py-1 block">
                    <AuroraText colors={["#FFFFFF", "#E5E7EB", "#D1D5DB", "#F3F4F6"]}>
                      your language.
                    </AuroraText>
                  </span>
             </div>
-
           </motion.h1>
 
           <p className="text-lg text-zinc-400 max-w-2xl mb-12 leading-relaxed">
@@ -101,7 +102,7 @@ export function LandingPage({ onFileUpload }: LandingPageProps) {
           </p>
 
           {/* --- UPLOAD BOX --- */}
-          <div className="w-full max-w-xl h-64 relative z-20">
+          <div className="w-full max-w-xl h-64 relative z-20 mb-10">
              <CometCard className="w-full h-full">
                <div
                  onDragEnter={handleDrag}
@@ -115,7 +116,7 @@ export function LandingPage({ onFileUpload }: LandingPageProps) {
                    flex flex-col items-center justify-center gap-4 text-center
                    transition-all duration-300 ease-in-out cursor-pointer overflow-hidden
                    ${isDragging 
-                     ? "border-blue-500 shadow-[0_0_30px_rgba(59,130,246,0.3)]" 
+                     ? "border-cyan-500 shadow-[0_0_30px_rgba(34,211,238,0.3)]" 
                      : "hover:border-white/30"
                    }
                  `}
