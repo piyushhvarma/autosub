@@ -2,15 +2,11 @@ import type React from "react"
 import type { Metadata, Viewport } from "next"
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
-import { subFont, autoFont } from "./fonts" // Importing from the same folder
+import { subFont, autoFont } from "./fonts"
 
 export const metadata: Metadata = {
-  title: "AutoSub - AI-Powered Subtitle Generation",
-  description: "Generate professional subtitles from your videos in seconds.",
-  icons: {
-    icon: "/icon.svg",
-    apple: "/icon.svg",
-  },
+  title: "AutoSub",
+  description: "AI Subtitle Generator",
 }
 
 export const viewport: Viewport = {
@@ -25,6 +21,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      // ✅ VERIFY THIS LINE: passing autoFont.variable
       className={`dark ${subFont.variable} ${autoFont.variable}`}
     >
       <body className="antialiased">

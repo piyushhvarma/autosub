@@ -79,17 +79,22 @@ export function LandingPage({ onFileUpload }: LandingPageProps) {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="text-5xl md:text-7xl mb-6 bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-white/60"
           >
-            <span className="font-sans font-bold tracking-tighter block mb-2">
-            your videos,
+            {/* Line 1: Standard Sans Font */}
+            <span className="font-sans font-bold tracking-tighter block mb-3">
+              your videos,
             </span>
 
-            <span className="font-serif italic font-medium tracking-tighter">
-               <AuroraText colors={["#FFFFFF", "#E5E7EB", "#D1D5DB", "#F3F4F6"]}>
-                 your language.
-               </AuroraText>
-            </span>
+            {/* Line 2: Premium Serif Font + Pointer Highlight */}
+            <div className="inline-block relative">
+              
+                 <span className="font-serif italic font-medium tracking-tighter px-4 py-1 block">
+                   <AuroraText colors={["#FFFFFF", "#E5E7EB", "#D1D5DB", "#F3F4F6"]}>
+                     your language.
+                   </AuroraText>
+                 </span>
+            </div>
+
           </motion.h1>
-
 
           <p className="text-lg text-zinc-400 max-w-2xl mb-12 leading-relaxed">
             Stop typing manually. Upload your video and let our AI generate frame-perfect subtitles in seconds.

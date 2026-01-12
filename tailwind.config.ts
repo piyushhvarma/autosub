@@ -18,7 +18,11 @@ const config = {
       },
     },
     extend: {
-      // 👇 THE AURORA ANIMATION FIX
+      fontFamily: {
+        sans: ["var(--font-inter)", "sans-serif"],
+        serif: ["var(--font-premium)", "serif"], // Links 'font-serif' to Playfair
+      },
+      
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
@@ -33,12 +37,6 @@ const config = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
-        fontFamily: {
-        // "sans" will be your "sub" font (Inter)
-        sans: ["var(--font-inter)", "sans-serif"],
-        // "serif" will be your "auto" font (Playfair)
-        serif: ["var(--font-playfair)", "serif"],
-      },
         aurora: {
           from: {
             backgroundPosition: "50% 50%, 50% 50%",

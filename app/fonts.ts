@@ -1,12 +1,14 @@
-import { Inter, Tinos } from "next/font/google"
+import { Inter, Playfair_Display } from "next/font/google"
 
 export const subFont = Inter({
   subsets: ["latin"],
-  variable: "--font-sub",
+  variable: "--font-inter",
 })
 
-export const autoFont = Tinos({
+
+export const autoFont = Playfair_Display({
   subsets: ["latin"],
-  weight: ["400", "700"],
-  variable: "--font-auto",
+  variable: "--font-premium",
+  weight: "variable", // Supports Thin, Regular, Medium, Bold, etc.
+  display: "swap",
 })
