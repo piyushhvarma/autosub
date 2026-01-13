@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import OpenAI, { toFile } from "openai";
 
+// Keep runtime as nodejs for buffer support
 export const runtime = "nodejs";
 
 const openai = new OpenAI({
@@ -9,35 +10,43 @@ const openai = new OpenAI({
 
 export async function POST(request: Request) {
   try {
-    const formData = await request.formData();
-    const file = formData.get("file") as File;
+    // 1. CHANGED: Parse JSON instead of FormData
+    // The frontend now sends { videoUrl: "https://..." }
+    const { videoUrl } = await request.json();
 
-    if (!file) {
-      return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
+    if (!videoUrl) {
+      return NextResponse.json({ error: "No video URL provided" }, { status: 400 });
     }
 
-    const arrayBuffer = await file.arrayBuffer();
+    console.log(">> Downloading video from Blob:", videoUrl);
+
+    // 2. NEW: Fetch the actual file from the Blob URL
+    const videoResponse = await fetch(videoUrl);
+    
+    if (!videoResponse.ok) {
+      throw new Error(`Failed to download video: ${videoResponse.statusText}`);
+    }
+
+    // Convert the download stream into a Buffer for OpenAI
+    const arrayBuffer = await videoResponse.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Trick OpenAI into thinking it's an MP4 (even for MOV files)
+    // 3. Trick OpenAI (Same as before)
     const openaiFile = await toFile(buffer, "input.mp4", {
       type: "video/mp4", 
     });
 
     console.log(">> Sending to OpenAI (Hinglish Mode)...");
 
-    // 🔥 THE HINGLISH TRICK 🔥
-    // We give it a 'prompt' full of Hinglish sentences.
-    // The AI sees this and thinks: "Oh, we are writing Hindi in English today!"
+    // 🔥 THE HINGLISH TRICK (Kept exactly the same) 🔥
     const transcription = await openai.audio.transcriptions.create({
       file: openaiFile,
       model: "whisper-1",
       response_format: "verbose_json",
       timestamp_granularity: "segment",
       prompt: "Hello dosto, kaise ho aap sab? Aaj hum coding seekhenge. Video ko like karo. Yeh Hinglish transcription hai.", 
-      language: "hi", // We tell it the audio is Hindi...
+      language: "hi", 
     });
-    // Note: Even with this, Whisper sometimes reverts to Devanagari. It's stubborn.
 
     console.log(">> Success! Received transcription.");
 
