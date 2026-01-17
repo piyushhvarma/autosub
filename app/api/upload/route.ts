@@ -13,9 +13,6 @@ export async function POST(request: Request) {
           allowedContentTypes: ['video/mp4', 'video/quicktime', 'video/webm'],
         };
       },
-      onUploadCompleted: async ({ blob, tokenPayload }) => {
-        console.log('blob upload completed', blob, tokenPayload);
-      },
     });
 
     return NextResponse.json(jsonResponse);

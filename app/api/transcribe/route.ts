@@ -45,7 +45,7 @@ export async function POST(request: Request) {
       response_format: "verbose_json",
       timestamp_granularity: "segment",
       prompt: "Hello dosto, kaise ho aap sab? Aaj hum coding seekhenge. Video ko like karo. Yeh Hinglish transcription hai.", 
-      language: "en", 
+      language: "en" 
     });
 
     console.log(">> Success! Received transcription.");
