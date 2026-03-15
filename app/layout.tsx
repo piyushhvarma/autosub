@@ -7,6 +7,9 @@ import { subFont, autoFont } from "./fonts"
 export const metadata: Metadata = {
   title: "AutoSub",
   description: "AI Subtitle Generator",
+  icons: {
+    icon: "/icon.png",
+  },
 }
 
 export const viewport: Viewport = {
