@@ -11,6 +11,7 @@ export async function POST(request: Request) {
       onBeforeGenerateToken: async () => {
         return {
           allowedContentTypes: ['video/mp4', 'video/quicktime', 'video/webm'],
+          allowOverwrite: true,
         };
       },
     });

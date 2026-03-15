@@ -43,7 +43,7 @@ export async function POST(request: Request) {
       file: openaiFile,
       model: "whisper-1",
       response_format: "verbose_json",
-      timestamp_granularity: "segment",
+      timestamp_granularities: ["segment"],
       prompt: "Hello dosto, kaise ho aap sab? Aaj hum coding seekhenge. Video ko like karo. Yeh Hinglish transcription hai.", 
       language: "en" 
     });

@@ -21,10 +21,11 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       // ✅ VERIFY THIS LINE: passing autoFont.variable
       className={`dark ${subFont.variable} ${autoFont.variable}`}
     >
-      <body className="antialiased">
+      <body className="antialiased" suppressHydrationWarning>
         {children}
         <Analytics />
       </body>

@@ -18,20 +18,20 @@ export interface UploadedFile {
 export default function Home() {
   const [stage, setStage] = useState<AppStage>("landing")
   const [uploadedFile, setUploadedFile] = useState<UploadedFile | null>(null)
-  const [subtitles, setSubtitles] = useState<any[]>([]) 
+  const [subtitles, setSubtitles] = useState<any[]>([])
 
   const handleFileUpload = async (file: File) => {
     // 1. Immediate Local Preview (so user sees something instantly)
     // We create a local URL just for the preview player
     const localPreviewUrl = URL.createObjectURL(file)
-    
+
     setUploadedFile({
       name: file.name,
       size: file.size,
       type: file.type,
-      url: localPreviewUrl, 
+      url: localPreviewUrl,
     })
-    
+
     // 2. Switch to Processing UI
     setStage("processing")
 
@@ -62,17 +62,17 @@ export default function Home() {
       }
 
       // --- STEP C: Success! ---
-      setSubtitles(data.segments || []) 
-      
+      setSubtitles(data.segments || [])
+
       // Update the file URL to the real Blob URL (better for sharing/exporting later)
       setUploadedFile(prev => prev ? { ...prev, url: blob.url } : null)
-      
+
       setStage("editor")
 
     } catch (error) {
       console.error("Processing failed:", error)
       alert("Error processing video. Check console for details.")
-      setStage("landing") 
+      setStage("landing")
       setUploadedFile(null)
     }
   }
@@ -86,16 +86,16 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-background">
       {stage === "landing" && <LandingPage onFileUpload={handleFileUpload} />}
-      
+
       {stage === "processing" && uploadedFile && (
         <ProcessingState fileName={uploadedFile.name} />
       )}
-      
+
       {stage === "editor" && uploadedFile && (
-        <EditorDashboard 
-          file={uploadedFile} 
-          subtitles={subtitles} 
-          onBack={handleBackToUpload} 
+        <EditorDashboard
+          file={uploadedFile}
+          subtitles={subtitles}
+          onBack={handleBackToUpload}
         />
       )}
     </main>
