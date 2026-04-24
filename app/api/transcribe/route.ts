@@ -38,13 +38,13 @@ export async function POST(request: Request) {
 
     console.log(">> Sending to OpenAI (Hinglish Mode)...");
 
-    // 🔥 THE HINGLISH TRICK (Kept exactly the same) 🔥
+    // 🔥 THE STRICT HINGLISH TRICK 🔥
     const transcription = await openai.audio.transcriptions.create({
       file: openaiFile,
       model: "whisper-1",
       response_format: "verbose_json",
       timestamp_granularities: ["segment"],
-      prompt: "Hello dosto, kaise ho aap sab? Aaj hum coding seekhenge. Video ko like karo. Yeh Hinglish transcription hai.", 
+      prompt: "Namaste dosto, kaise ho? Aaj hum is video mein Hinglish subtitles generate karenge. Clean English script, no Devanagari. Like, share, subscribe!", 
       language: "en" 
     });
 

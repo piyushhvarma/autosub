@@ -5,10 +5,37 @@ import "./globals.css"
 import { subFont, autoFont } from "./fonts"
 
 export const metadata: Metadata = {
-  title: "AutoSub",
-  description: "AI Subtitle Generator",
+  title: "AutoSub — AI Hinglish Subtitles for Creators",
+  description: "Generate clean, readable Hinglish (Romanized Hindi) subtitles automatically. No more Devanagari—just pure Hinglish for Reels, Shorts, and YouTube.",
+  keywords: [
+    "Hinglish Subtitles", 
+    "AI Hinglish Captions", 
+    "Roman Hindi Subtitles", 
+    "Auto Captions for Reels", 
+    "Hindi English Transcription"
+  ],
   icons: {
     icon: "/icon.png",
+  },
+  openGraph: {
+    title: "AutoSub — Instant Hinglish Subtitles",
+    description: "The fastest way to add Romanized Hindi captions to your videos. Built for Indian creators.",
+    type: "website",
+    url: "https://autosub.xyz", // Placeholder
+    images: [
+      {
+        url: "/meta-tag-png.png",
+        width: 1200,
+        height: 630,
+        alt: "AutoSub Hinglish Preview",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "AutoSub — AI Hinglish Subtitles",
+    description: "No more Devanagari. Get pure Hinglish subtitles for your content.",
+    images: ["/meta-tag-png.png"],
   },
 }
 
